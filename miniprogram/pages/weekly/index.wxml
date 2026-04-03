@@ -1,0 +1,16 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">WEEKLY WORKSPACE</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">{{hint}}</view>
+    <view class="action-row">
+      <button class="ghost-button">编辑</button>
+      <button class="primary-button">完成</button>
+    </view>
+  </view>
+
+  <view class="section-block">
+    <view class="section-title">一期状态</view>
+    <view class="section-text">这里将承载周报生成、预览、编辑和最终复制弹窗。</view>
+  </view>
+</view>

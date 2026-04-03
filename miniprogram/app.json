@@ -1,0 +1,36 @@
+{
+  "pages": [
+    "pages/daily/index",
+    "pages/weekly/index",
+    "pages/me/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "日报周报助手",
+    "navigationBarBackgroundColor": "#f7f4ec",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f3efe4",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#7e7361",
+    "selectedColor": "#1e4d3b",
+    "backgroundColor": "#fffaf1",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/daily/index",
+        "text": "日报"
+      },
+      {
+        "pagePath": "pages/weekly/index",
+        "text": "周报"
+      },
+      {
+        "pagePath": "pages/me/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

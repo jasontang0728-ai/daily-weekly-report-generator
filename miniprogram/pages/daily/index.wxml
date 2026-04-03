@@ -1,0 +1,16 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">DAILY WORKSPACE</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">{{hint}}</view>
+    <view class="action-row">
+      <button class="ghost-button">编辑</button>
+      <button class="primary-button">完成</button>
+    </view>
+  </view>
+
+  <view class="section-block">
+    <view class="section-title">一期状态</view>
+    <view class="section-text">项目骨架已建立。下一步开始接入输入面板、模板化预览和 AI 调用链路。</view>
+  </view>
+</view>

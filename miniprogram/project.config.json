@@ -1,0 +1,18 @@
+{
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "miniprogramRoot": "./",
+  "srcMiniprogramRoot": "./",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false,
+    "packNpmRelationList": [],
+    "ignoreUploadUnusedFiles": true,
+    "ignoreDevUnusedFiles": true
+  },
+  "simulatorType": "wechat",
+  "condition": {}
+}

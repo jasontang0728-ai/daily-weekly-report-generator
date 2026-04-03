@@ -1,0 +1,14 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">MY SPACE</view>
+    <view class="page-title">我的</view>
+    <view class="page-copy">历史记录和模板管理入口会统一放在这里。</view>
+  </view>
+
+  <block wx:for="{{entries}}" wx:key="*this">
+    <view class="section-block">
+      <view class="section-title">{{item}}</view>
+      <view class="section-text">入口已预留，后续任务会接入真实数据和跳转逻辑。</view>
+    </view>
+  </block>
+</view>
