@@ -1,0 +1,14 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">HISTORY</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">仅展示标题和日期，点进详情后可直接复制成品。</view>
+  </view>
+
+  <block wx:for="{{items}}" wx:key="id">
+    <view class="section-block history-card" data-id="{{item.id}}" data-type="{{item.type}}" bindtap="handleOpen">
+      <view class="section-title">{{item.title}}</view>
+      <view class="section-text">{{item.dateLabel}}</view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,10 @@
+<view wx:if="{{visible}}" class="popup-mask" bindtap="handleMaskTap">
+  <view class="popup-card" catchtap="noop">
+    <view class="popup-title">{{title}}</view>
+    <view class="popup-content">{{content}}</view>
+    <view class="popup-actions">
+      <button class="ghost-button" bindtap="handleClose">关闭</button>
+      <button class="primary-button" bindtap="handleCopy">一键复制</button>
+    </view>
+  </view>
+</view>

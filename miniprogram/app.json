@@ -2,7 +2,11 @@
   "pages": [
     "pages/daily/index",
     "pages/weekly/index",
-    "pages/me/index"
+    "pages/me/index",
+    "pages/history-list/index",
+    "pages/history-detail/index",
+    "pages/template-daily/index",
+    "pages/template-weekly/index"
   ],
   "window": {
     "navigationBarTitleText": "日报周报助手",

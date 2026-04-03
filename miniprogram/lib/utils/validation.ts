@@ -1,7 +1,7 @@
 import type { ValidationResult } from "../types/report"
 
-const DAILY_INPUT_LIMIT = 500
-const TEMPLATE_SECTION_LIMIT = 6
+export const DAILY_INPUT_LIMIT = 500
+export const TEMPLATE_SECTION_LIMIT = 6
 
 export function validateDailyRawInput(input: string): ValidationResult {
   if (input.length > DAILY_INPUT_LIMIT) {

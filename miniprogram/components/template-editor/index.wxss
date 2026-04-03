@@ -1,0 +1,53 @@
+@import "../../app.wxss";
+
+.template-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.template-row {
+  padding: 24rpx;
+  border-radius: 22rpx;
+  background: rgba(255, 250, 241, 0.92);
+  box-shadow: 0 18rpx 40rpx rgba(84, 63, 36, 0.05);
+}
+
+.template-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.template-order {
+  color: #8d816e;
+  font-size: 24rpx;
+}
+
+.template-name {
+  color: #16372b;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.mini-button {
+  margin: 0;
+  padding: 0 22rpx;
+  min-width: 0;
+  border-radius: 999rpx;
+  background: #f6efe0;
+  color: #1e4d3b;
+  font-size: 24rpx;
+  line-height: 64rpx;
+}
+
+.danger-button {
+  color: #a6493c;
+}

@@ -1,0 +1,18 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">TEMPLATE</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">支持新增、删除、重命名和排序。历史成品不会受后续模板修改影响。</view>
+  </view>
+
+  <template-editor
+    sections="{{sections}}"
+    bind:add="handleAdd"
+    bind:rename="handleRename"
+    bind:remove="handleRemove"
+    bind:moveup="handleMoveUp"
+    bind:movedown="handleMoveDown"
+  />
+
+  <button class="primary-button single-button" bindtap="handleSave">保存模板</button>
+</view>

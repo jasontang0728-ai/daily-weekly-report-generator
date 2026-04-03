@@ -3,14 +3,60 @@
     <view class="eyebrow">DAILY WORKSPACE</view>
     <view class="page-title">{{title}}</view>
     <view class="page-copy">{{hint}}</view>
-    <view class="action-row">
-      <button class="ghost-button">编辑</button>
-      <button class="primary-button">完成</button>
+    <view class="meta-row">
+      <view class="meta-pill">{{reportDate}}</view>
+      <view class="meta-pill">当前模板 {{templateSections.length}} 栏</view>
     </view>
   </view>
 
   <view class="section-block">
-    <view class="section-title">一期状态</view>
-    <view class="section-text">项目骨架已建立。下一步开始接入输入面板、模板化预览和 AI 调用链路。</view>
+    <view class="section-title">原始输入</view>
+    <textarea
+      class="raw-input"
+      maxlength="{{limit}}"
+      placeholder="例如：今天完成了登录页调整，联调了两个接口，遇到权限问题，明天继续测试。"
+      value="{{rawInput}}"
+      bindinput="handleInput"
+    />
+    <view class="input-footer">
+      <view class="section-text">{{rawInputCount}} / {{limit}}</view>
+      <button class="primary-button action-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">AI整理</button>
+    </view>
   </view>
+
+  <view wx:if="{{document}}" class="section-block">
+    <view class="section-title">生成结果预览</view>
+    <block wx:if="{{!isEditing}}">
+      <doc-preview title="{{document.title}}" finalText="{{previewText}}" />
+    </block>
+
+    <block wx:if="{{isEditing}}">
+      <block wx:for="{{editorSections}}" wx:key="order">
+        <view class="editor-card">
+          <view class="editor-title">{{item.name}}</view>
+          <textarea
+            class="editor-textarea"
+            data-index="{{index}}"
+            value="{{item.text}}"
+            placeholder="每行一条事项"
+            bindinput="handleEditorInput"
+          />
+        </view>
+      </block>
+      <button class="ghost-button single-button" bindtap="handleCancelEdit">取消编辑</button>
+    </block>
+
+    <view class="action-row">
+      <button class="ghost-button" bindtap="handleEdit">编辑</button>
+      <button class="primary-button" disabled="{{disableFinish}}" bindtap="handleFinish">完成</button>
+    </view>
+  </view>
+
+  <final-popup
+    visible="{{popupVisible}}"
+    title="日报已保存"
+    content="{{popupText}}"
+    bind:close="handlePopupClose"
+    bind:copied="handlePopupCopied"
+  />
 </view>

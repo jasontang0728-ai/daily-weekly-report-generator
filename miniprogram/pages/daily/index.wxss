@@ -1,1 +1,66 @@
 @import "../../app.wxss";
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.meta-pill {
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: #f6efe0;
+  color: #4b554f;
+  font-size: 24rpx;
+}
+
+.raw-input {
+  width: 100%;
+  min-height: 220rpx;
+  margin-top: 16rpx;
+  padding: 20rpx;
+  box-sizing: border-box;
+  border-radius: 18rpx;
+  background: #fffcf6;
+}
+
+.input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 18rpx;
+}
+
+.action-button {
+  flex: none;
+  width: 220rpx;
+}
+
+.editor-card {
+  margin-top: 18rpx;
+  padding: 22rpx;
+  border-radius: 22rpx;
+  background: #fffcf6;
+}
+
+.editor-title {
+  color: #16372b;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.editor-textarea {
+  width: 100%;
+  min-height: 180rpx;
+  margin-top: 16rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #fff7eb;
+}
+
+.single-button {
+  margin-top: 18rpx;
+}

@@ -13,7 +13,10 @@
   },
   "include": [
     "app.ts",
+    "components/**/*.ts",
+    "lib/**/*.ts",
     "pages/**/*.ts",
+    "tests/**/*.ts",
     "typings/**/*.d.ts"
   ]
 }

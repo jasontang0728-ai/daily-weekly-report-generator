@@ -1,0 +1,18 @@
+<view class="template-shell">
+  <block wx:for="{{sections}}" wx:key="id">
+    <view class="template-row">
+      <view class="template-meta">
+        <view class="template-order">栏目 {{index + 1}}</view>
+        <view class="template-name">{{item.name}}</view>
+      </view>
+      <view class="template-actions">
+        <button class="mini-button" data-index="{{index}}" bindtap="handleMoveUp">上移</button>
+        <button class="mini-button" data-index="{{index}}" bindtap="handleMoveDown">下移</button>
+        <button class="mini-button" data-id="{{item.id}}" bindtap="handleRename">重命名</button>
+        <button class="mini-button danger-button" data-id="{{item.id}}" bindtap="handleRemove">删除</button>
+      </view>
+    </view>
+  </block>
+
+  <button class="ghost-button" bindtap="handleAdd">新增栏目</button>
+</view>

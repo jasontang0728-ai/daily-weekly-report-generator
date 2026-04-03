@@ -1,0 +1,18 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">TEMPLATE</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">周报模板同样支持增删改排。AI 生成会严格按当前模板结构输出。</view>
+  </view>
+
+  <template-editor
+    sections="{{sections}}"
+    bind:add="handleAdd"
+    bind:rename="handleRename"
+    bind:remove="handleRemove"
+    bind:moveup="handleMoveUp"
+    bind:movedown="handleMoveDown"
+  />
+
+  <button class="primary-button single-button" bindtap="handleSave">保存模板</button>
+</view>

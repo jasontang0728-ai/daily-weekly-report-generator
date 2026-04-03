@@ -19,7 +19,7 @@ describe("report rendering", () => {
         {
           name: "今日完成",
           order: 1,
-          items: ["完成登录页调整。", "联调两个后端接口。"]
+          items: ["完成登录页调整", "联调两个后端接口"]
         },
         {
           name: "问题风险",
@@ -30,8 +30,8 @@ describe("report rendering", () => {
     })
 
     expect(output).toContain("一、今日完成")
-    expect(output).toContain("1. 完成登录页调整。")
-    expect(output).toContain("2. 联调两个后端接口。")
+    expect(output).toContain("1. 完成登录页调整")
+    expect(output).toContain("2. 联调两个后端接口")
     expect(output).toContain("二、问题风险")
     expect(output).toContain("1. 无")
   })

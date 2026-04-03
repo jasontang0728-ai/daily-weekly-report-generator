@@ -1,9 +1,9 @@
 App<IAppOption>({
   globalData: {
-    currentUserOpenId: ""
+    currentUserOpenId: "demo-openid"
   },
 
   onLaunch() {
-    // Identity bootstrap and environment initialization are added in later tasks.
+    // The phase-1 local demo flow uses a stable demo identity until CloudBase auth is wired in.
   }
 })

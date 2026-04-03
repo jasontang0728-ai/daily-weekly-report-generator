@@ -1,0 +1,28 @@
+@import "../../app.wxss";
+
+.preview-shell {
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 250, 241, 0.92);
+  box-shadow: 0 20rpx 60rpx rgba(84, 63, 36, 0.06);
+}
+
+.preview-title {
+  color: #16372b;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.preview-text {
+  margin-top: 20rpx;
+  color: #33423b;
+  font-size: 28rpx;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.preview-empty {
+  color: #7a766d;
+  font-size: 28rpx;
+  line-height: 1.7;
+}

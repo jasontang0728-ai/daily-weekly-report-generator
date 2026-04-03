@@ -1,0 +1,5 @@
+{
+  "usingComponents": {
+    "doc-preview": "/components/doc-preview/index"
+  }
+}

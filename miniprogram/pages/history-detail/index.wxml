@@ -1,0 +1,13 @@
+<view class="page-shell">
+  <view class="hero-card">
+    <view class="eyebrow">ARCHIVE</view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-copy">历史成品默认只读，支持一键复制。</view>
+  </view>
+
+  <doc-preview title="{{title}}" finalText="{{finalText}}" />
+
+  <view class="action-row">
+    <button class="primary-button" bindtap="handleCopy">复制</button>
+  </view>
+</view>

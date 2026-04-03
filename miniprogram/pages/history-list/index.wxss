@@ -1,10 +1,10 @@
 @import "../../app.wxss";
 
-.entry-card {
+.history-card {
   position: relative;
 }
 
-.entry-card::after {
+.history-card::after {
   content: ">";
   position: absolute;
   right: 28rpx;

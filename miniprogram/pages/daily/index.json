@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "日报"
+  "usingComponents": {
+    "doc-preview": "/components/doc-preview/index",
+    "final-popup": "/components/final-popup/index"
+  }
 }

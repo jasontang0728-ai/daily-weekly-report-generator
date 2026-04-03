@@ -1,0 +1,5 @@
+{
+  "usingComponents": {
+    "template-editor": "/components/template-editor/index"
+  }
+}

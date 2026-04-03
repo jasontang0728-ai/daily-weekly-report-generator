@@ -3,14 +3,51 @@
     <view class="eyebrow">WEEKLY WORKSPACE</view>
     <view class="page-title">{{title}}</view>
     <view class="page-copy">{{hint}}</view>
-    <view class="action-row">
-      <button class="ghost-button">编辑</button>
-      <button class="primary-button">完成</button>
+    <view class="meta-row">
+      <view class="meta-pill">{{weekTitle}}</view>
+      <view class="meta-pill">本周日报 {{sourceCount}} 篇</view>
     </view>
   </view>
 
   <view class="section-block">
-    <view class="section-title">一期状态</view>
-    <view class="section-text">这里将承载周报生成、预览、编辑和最终复制弹窗。</view>
+    <view class="section-title">本周周报</view>
+    <view class="section-text">系统会根据本周已完成日报自动提炼，再保留编辑入口给你补充下周计划。</view>
+    <button class="primary-button single-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">生成本周周报</button>
   </view>
+
+  <view wx:if="{{document}}" class="section-block">
+    <view class="section-title">周报预览</view>
+    <block wx:if="{{!isEditing}}">
+      <doc-preview title="{{document.title}}" finalText="{{previewText}}" />
+    </block>
+
+    <block wx:if="{{isEditing}}">
+      <block wx:for="{{editorSections}}" wx:key="order">
+        <view class="editor-card">
+          <view class="editor-title">{{item.name}}</view>
+          <textarea
+            class="editor-textarea"
+            data-index="{{index}}"
+            value="{{item.text}}"
+            placeholder="每行一条事项"
+            bindinput="handleEditorInput"
+          />
+        </view>
+      </block>
+      <button class="ghost-button single-button" bindtap="handleCancelEdit">取消编辑</button>
+    </block>
+
+    <view class="action-row">
+      <button class="ghost-button" bindtap="handleEdit">编辑</button>
+      <button class="primary-button" disabled="{{disableFinish}}" bindtap="handleFinish">完成</button>
+    </view>
+  </view>
+
+  <final-popup
+    visible="{{popupVisible}}"
+    title="周报已保存"
+    content="{{popupText}}"
+    bind:close="handlePopupClose"
+    bind:copied="handlePopupCopied"
+  />
 </view>
