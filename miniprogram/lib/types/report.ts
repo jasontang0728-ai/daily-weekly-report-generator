@@ -4,6 +4,12 @@ export interface ReportSection {
   items: string[]
 }
 
+export interface TemplateSection {
+  id: string
+  name: string
+  order: number
+}
+
 export interface ReportDocument {
   title: string
   sections: ReportSection[]
