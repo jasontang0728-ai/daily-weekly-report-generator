@@ -13,14 +13,19 @@ Page({
 
     this.setData({
       type,
-      title: type === "weekly" ? "周报历史" : "日报历史",
-      items: listHistory(type)
+      title: type === "weekly" ? "周报历史" : "日报历史"
     })
+
+    void this.refreshList(type)
   },
 
   onShow() {
+    void this.refreshList(this.data.type as "daily" | "weekly")
+  },
+
+  async refreshList(type: "daily" | "weekly") {
     this.setData({
-      items: listHistory(this.data.type as "daily" | "weekly")
+      items: await listHistory(type)
     })
   },
 

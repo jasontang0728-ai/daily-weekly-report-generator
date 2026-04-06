@@ -1,4 +1,4 @@
-import { generateWeeklyReportDraft, validateGeneratedDocument } from "../../lib/services/ai"
+import { generateWeeklyReport } from "../../lib/services/ai"
 import { listCurrentWeekDailyReports, getWeeklyReportByWeekKey, getWeeklyTemplate, saveWeeklyReport } from "../../lib/services/db"
 import { createWeeklyWorkspaceState, finishWeeklyGeneration, startWeeklyGeneration } from "../../lib/services/weekly-workspace"
 import type { ReportDocument, ReportSection, TemplateSection } from "../../lib/types/report"
@@ -54,11 +54,29 @@ Page({
   },
 
   onShow() {
-    const template = getWeeklyTemplate()
+    void this.safeLoadPage()
+  },
+
+  async safeLoadPage() {
+    try {
+      await this.loadPage()
+    } catch (error) {
+      console.error("Failed to load weekly page.", error)
+      wx.showToast({
+        title: "周报页面加载失败",
+        icon: "none"
+      })
+    }
+  },
+
+  async loadPage() {
     const weekInfo = getWeekKey()
-    const weeklyReport = getWeeklyReportByWeekKey(weekInfo.weekKey)
+    const [template, weeklyReport, sourceReports] = await Promise.all([
+      getWeeklyTemplate(),
+      getWeeklyReportByWeekKey(weekInfo.weekKey),
+      listCurrentWeekDailyReports()
+    ])
     const workspace = createWeeklyWorkspaceState()
-    const sourceReports = listCurrentWeekDailyReports()
 
     this.setData({
       templateSections: template.sections,
@@ -76,8 +94,8 @@ Page({
     })
   },
 
-  handleGenerate() {
-    const sourceReports = listCurrentWeekDailyReports()
+  async handleGenerate() {
+    const sourceReports = await listCurrentWeekDailyReports()
 
     if (sourceReports.length === 0) {
       wx.showToast({
@@ -103,33 +121,35 @@ Page({
       isEditing: false
     })
 
-    const weekInfo = getWeekKey()
-    const draft = generateWeeklyReportDraft(sourceReports, this.data.templateSections, weekInfo.year, weekInfo.week)
-    const structureValidation = validateGeneratedDocument(draft, this.data.templateSections)
+    try {
+      const weekInfo = getWeekKey()
+      const draft = await generateWeeklyReport({
+        reports: sourceReports,
+        templateSections: this.data.templateSections,
+        year: weekInfo.year,
+        week: weekInfo.week
+      })
+      const nextState = finishWeeklyGeneration(generatingState, draft)
 
-    if (!structureValidation.valid) {
+      this.setData({
+        mode: nextState.mode,
+        document: draft,
+        previewText: renderReportDocument(draft),
+        editorSections: toEditorSections(draft.sections),
+        disableGenerate: nextState.disableGenerate,
+        disableFinish: nextState.disableFinish
+      })
+    } catch (error) {
       this.setData({
         mode: "empty",
         disableGenerate: false,
         disableFinish: true
       })
       wx.showToast({
-        title: "生成失败，请重试",
+        title: error instanceof Error ? error.message : "周报生成失败，请重试",
         icon: "none"
       })
-      return
     }
-
-    const nextState = finishWeeklyGeneration(generatingState, draft)
-
-    this.setData({
-      mode: nextState.mode,
-      document: draft,
-      previewText: renderReportDocument(draft),
-      editorSections: toEditorSections(draft.sections),
-      disableGenerate: nextState.disableGenerate,
-      disableFinish: nextState.disableFinish
-    })
   },
 
   handleEdit() {
@@ -161,9 +181,9 @@ Page({
     })
   },
 
-  handleFinish() {
+  async handleFinish() {
     const document = this.data.isEditing
-      ? toDocument(this.data.document?.title ?? "", this.data.editorSections)
+      ? toDocument(this.data.document ? this.data.document.title : "", this.data.editorSections)
       : this.data.document
 
     if (!document) {
@@ -175,7 +195,7 @@ Page({
     }
 
     const weekInfo = getWeekKey()
-    const saved = saveWeeklyReport(
+    const saved = await saveWeeklyReport(
       weekInfo.weekKey,
       weekInfo.year,
       weekInfo.week,
@@ -198,6 +218,23 @@ Page({
   handlePopupClose() {
     this.setData({
       popupVisible: false
+    })
+  },
+
+  noop() {
+    return undefined
+  },
+
+  handlePopupCopy() {
+    if (!this.data.popupText) {
+      return
+    }
+
+    wx.setClipboardData({
+      data: this.data.popupText,
+      success: () => {
+        this.handlePopupCopied()
+      }
     })
   },
 

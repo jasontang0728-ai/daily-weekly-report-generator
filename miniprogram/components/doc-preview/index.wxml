@@ -1,5 +1,0 @@
-<view class="preview-shell">
-  <view wx:if="{{title}}" class="preview-title">{{title}}</view>
-  <view wx:if="{{finalText}}" class="preview-text">{{finalText}}</view>
-  <view wx:else class="preview-empty">{{emptyText}}</view>
-</view>

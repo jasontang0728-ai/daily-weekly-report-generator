@@ -1,8 +1,10 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import type { ReportDocument, TemplateSection } from "../../lib/types/report"
 import {
+  generateDailyReport,
   generateDailyReportDraft,
+  generateWeeklyReport,
   generateWeeklyReportDraft,
   validateGeneratedDocument
 } from "../../lib/services/ai"
@@ -36,6 +38,80 @@ function makeDailyDocument(
 }
 
 describe("ai service", () => {
+  test("calls cloud run through callContainer when runtime config enables cloud mode", async () => {
+    const callContainer = vi.fn().mockResolvedValue({
+      data: {
+        document: {
+          title: "2026年4月4日日报",
+          sections: [
+            { name: "今日完成", order: 1, items: ["完成真实接入"] },
+            { name: "问题风险", order: 2, items: ["无"] },
+            { name: "明日计划", order: 3, items: ["补充开发者工具验证"] }
+          ]
+        }
+      }
+    })
+
+    const document = await generateDailyReport(
+      {
+        rawInput: "今天完成真实接入，明天补充开发者工具验证。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-04"
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "test-123",
+          cloudServiceName: "report-ai",
+          useCloudRun: true
+        },
+        callContainer
+      }
+    )
+
+    expect(callContainer).toHaveBeenCalledWith({
+      config: { env: "test-123" },
+      path: "/api/reports/daily/generate",
+      method: "POST",
+      header: {
+        "X-WX-SERVICE": "report-ai",
+        "content-type": "application/json"
+      },
+      data: {
+        rawInput: "今天完成真实接入，明天补充开发者工具验证。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-04"
+      }
+    })
+    expect(document.title).toBe("2026年4月4日日报")
+  })
+
+  test("falls back to the local draft generator when cloud run is not configured", async () => {
+    const document = await generateWeeklyReport(
+      {
+        reports: [
+          makeDailyDocument(
+            "2026年4月3日日报",
+            ["完成 CloudBase 联调"],
+            ["无"],
+            ["补充 acceptance checklist"]
+          )
+        ],
+        templateSections: weeklyTemplate,
+        year: 2026,
+        week: 14
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "",
+          cloudServiceName: ""
+        }
+      }
+    )
+
+    expect(document.title).toBe("2026年第14周周报")
+    expect(document.sections).toHaveLength(3)
+  })
+
   test("builds a daily draft that matches the active template sections", () => {
     const draft = generateDailyReportDraft(
       "今天完成登录页调整，联调了两个接口，遇到权限报错，明天继续测试登录流程。",
@@ -58,7 +134,7 @@ describe("ai service", () => {
     const result = validateGeneratedDocument(
       {
         title: "2026年4月4日日报",
-        sections: [{ name: "今日完成", order: 1, items: ["完成日报页"] }]
+        sections: [{ name: "今日完成", order: 1, items: ["完成日报页面"] }]
       },
       dailyTemplate
     )

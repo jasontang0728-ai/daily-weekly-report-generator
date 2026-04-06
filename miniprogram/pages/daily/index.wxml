@@ -1,33 +1,31 @@
 <view class="page-shell">
-  <view class="hero-card">
-    <view class="eyebrow">DAILY WORKSPACE</view>
-    <view class="page-title">{{title}}</view>
-    <view class="page-copy">{{hint}}</view>
-    <view class="meta-row">
-      <view class="meta-pill">{{reportDate}}</view>
-      <view class="meta-pill">当前模板 {{templateSections.length}} 栏</view>
-    </view>
-  </view>
+  <view class="plain-header plain-header-b">DAILY WORKSPACE</view>
 
-  <view class="section-block">
+  <view class="section-block workspace-panel">
     <view class="section-title">原始输入</view>
     <textarea
       class="raw-input"
       maxlength="{{limit}}"
-      placeholder="例如：今天完成了登录页调整，联调了两个接口，遇到权限问题，明天继续测试。"
+      placeholder="{{hint}}"
+      placeholder-style="color:#98a09f;line-height:1.75;"
       value="{{rawInput}}"
       bindinput="handleInput"
     />
     <view class="input-footer">
       <view class="section-text">{{rawInputCount}} / {{limit}}</view>
-      <button class="primary-button action-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">AI整理</button>
+      <button class="compact-action-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">AI整理</button>
     </view>
   </view>
 
   <view wx:if="{{document}}" class="section-block">
     <view class="section-title">生成结果预览</view>
+
     <block wx:if="{{!isEditing}}">
-      <doc-preview title="{{document.title}}" finalText="{{previewText}}" />
+      <view class="preview-shell">
+        <view wx:if="{{document.title}}" class="preview-title">{{document.title}}</view>
+        <view wx:if="{{previewText}}" class="preview-text">{{previewText}}</view>
+        <view wx:else class="preview-empty">暂时还没有生成内容</view>
+      </view>
     </block>
 
     <block wx:if="{{isEditing}}">
@@ -52,11 +50,14 @@
     </view>
   </view>
 
-  <final-popup
-    visible="{{popupVisible}}"
-    title="日报已保存"
-    content="{{popupText}}"
-    bind:close="handlePopupClose"
-    bind:copied="handlePopupCopied"
-  />
+  <view wx:if="{{popupVisible}}" class="popup-mask" bindtap="handlePopupClose">
+    <view class="popup-card" catchtap="noop">
+      <view class="popup-title">日报已保存</view>
+      <view class="popup-content">{{popupText}}</view>
+      <view class="popup-actions">
+        <button class="ghost-button" bindtap="handlePopupClose">关闭</button>
+        <button class="primary-button" bindtap="handlePopupCopy">一键复制</button>
+      </view>
+    </view>
+  </view>
 </view>

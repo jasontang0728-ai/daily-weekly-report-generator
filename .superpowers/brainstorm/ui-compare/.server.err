@@ -1,0 +1,26 @@
+=D:\CODEX\日报周报自动生成器\.worktrees\feat-bootstrap\.superpowers\brainstorm\ui-compare : 无法将“=D:\CODEX\日报周报
+自动生成器\.worktrees\feat-bootstrap\.superpowers\brainstorm\ui-compare”项识别为 cmdlet、函数、脚本文件或可运行程序的
+名称。请检查名称的拼写，如果包括路径，请确保路径正确，然后再试一次。
+所在位置 行:1 字符: 1
++ ='D:\CODEX\日报周报自动生成器\.worktrees\feat-bootstrap\.superpowers\brainstor ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=D:\CODEX\日报周报自...torm\ui-compare:String) [], CommandNotFoundExcept
+ion
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+=127.0.0.1 : 无法将“=127.0.0.1”项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，如果包括路径，请
+确保路径正确，然后再试一次。
+所在位置 行:1 字符: 85
++ ... t-bootstrap\.superpowers\brainstorm\ui-compare'; ='127.0.0.1'; ='loca ...
++                                                      ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=127.0.0.1:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+=localhost : 无法将“=localhost”项识别为 cmdlet、函数、脚本文件或可运行程序的名称。请检查名称的拼写，如果包括路径，请
+确保路径正确，然后再试一次。
+所在位置 行:1 字符: 99
++ ... uperpowers\brainstorm\ui-compare'; ='127.0.0.1'; ='localhost'; node s ...
++                                                      ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (=localhost:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

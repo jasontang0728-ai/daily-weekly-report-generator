@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "build": "node ./node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "start": "node ./dist/server.js",
     "typecheck": "node ./node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
     "test:run": "node ./node_modules/vitest/vitest.mjs run"
   },
   "devDependencies": {
+    "@types/node": "^24.6.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
   }

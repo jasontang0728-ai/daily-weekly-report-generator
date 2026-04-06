@@ -2,17 +2,41 @@
   <view class="hero-card">
     <view class="eyebrow">TEMPLATE</view>
     <view class="page-title">{{title}}</view>
-    <view class="page-copy">支持新增、删除、重命名和排序。历史成品不会受后续模板修改影响。</view>
+    <view class="page-copy">支持新增、删除、编辑和排序。历史成品不会受后续模板修改影响。</view>
   </view>
 
-  <template-editor
-    sections="{{sections}}"
-    bind:add="handleAdd"
-    bind:rename="handleRename"
-    bind:remove="handleRemove"
-    bind:moveup="handleMoveUp"
-    bind:movedown="handleMoveDown"
-  />
+  <view class="template-list" id="template-list">
+    <block wx:for="{{sections}}" wx:key="id">
+      <view
+        id="template-card-{{index}}"
+        class="section-block template-card {{dragging && dragIndex === index ? 'is-dragging' : ''}} {{dragTargetIndex === index && dragIndex !== index ? 'is-drop-target' : ''}}"
+        style="{{cardStyles[index]}}"
+      >
+        <view class="template-toolbar">
+          <view class="template-left">
+            <view class="template-index">栏目 {{index + 1}}</view>
+            <view class="template-name">{{item.name}}</view>
+            <view class="template-edit" data-id="{{item.id}}" catchtap="handleRename">编辑</view>
+          </view>
 
+          <view class="template-right">
+            <view class="template-delete" data-id="{{item.id}}" catchtap="handleRemove">删除</view>
+            <view
+              class="template-drag-handle"
+              data-index="{{index}}"
+              catchlongpress="handleDragStart"
+              catchtouchmove="handleDragMove"
+              catchtouchend="handleDragEnd"
+              catchtouchcancel="handleDragCancel"
+            >
+              ⋮⋮
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <button class="ghost-button single-button" bindtap="handleAdd">新增栏目</button>
   <button class="primary-button single-button" bindtap="handleSave">保存模板</button>
 </view>

@@ -1,3 +1,4 @@
+import { getRuntimeConfig, isCloudRunEnabled, type RuntimeConfig } from "../config/runtime"
 import type { ReportDocument, ReportSection, TemplateSection, ValidationResult } from "../types/report"
 import { formatDailyTitle, formatWeeklyTitle } from "../utils/date"
 
@@ -5,10 +6,46 @@ const COMPLETED_KEYWORDS = ["完成", "联调", "整理", "上线", "实现", "�
 const RISK_KEYWORDS = ["问题", "风险", "阻塞", "异常", "报错", "卡住", "权限", "延迟", "待确认"]
 const PLAN_KEYWORDS = ["明天", "明日", "后续", "继续", "计划", "待推进", "下周", "跟进", "补充", "验证"]
 
+interface DailyGenerateInput {
+  rawInput: string
+  templateSections: TemplateSection[]
+  reportDate: string
+}
+
+interface WeeklyGenerateInput {
+  reports: ReportDocument[]
+  templateSections: TemplateSection[]
+  year: number
+  week: number
+}
+
+interface GenerateOptions {
+  runtimeConfig?: Partial<RuntimeConfig>
+  callContainer?: CallContainer
+}
+
+interface CallContainerRequest {
+  config: {
+    env: string
+  }
+  path: string
+  method: "POST"
+  header: Record<string, string>
+  data: unknown
+}
+
+interface CallContainerResponse {
+  data?: {
+    document?: ReportDocument
+  } | ReportDocument
+}
+
+type CallContainer = (request: CallContainerRequest) => Promise<CallContainerResponse>
+
 function splitRawInput(rawInput: string): string[] {
   return rawInput
-    .split(/[\n。！？；;，,]/)
-    .map((item) => item.trim().replace(/^[，、,.\s]+|[，、,.\s]+$/g, ""))
+    .split(/[\n。！？；;，]/)
+    .map((item) => item.trim().replace(/^[，、.\s]+|[，、.\s]+$/g, ""))
     .filter(Boolean)
 }
 
@@ -23,10 +60,6 @@ function categorizeDailySentence(sentence: string): "risk" | "plan" | "completed
 
   if (hasAnyKeyword(sentence, RISK_KEYWORDS)) {
     return "risk"
-  }
-
-  if (hasAnyKeyword(sentence, COMPLETED_KEYWORDS)) {
-    return "completed"
   }
 
   return "completed"
@@ -57,7 +90,7 @@ function getSectionCategory(name: string): "risk" | "plan" | "completed" {
 }
 
 function normalizeItem(input: string): string {
-  return input.replace(/[，。、；：,.!?！？\s]/g, "")
+  return input.replace(/[，。、；;,.!?！？\s]/g, "")
 }
 
 function uniqueItems(items: string[]): string[] {
@@ -73,6 +106,62 @@ function uniqueItems(items: string[]): string[] {
     seen.add(key)
     return true
   })
+}
+
+function getDefaultCallContainer(): CallContainer {
+  const cloudApi = typeof wx === "undefined"
+    ? undefined
+    : (wx.cloud as unknown as { callContainer?: CallContainer })
+
+  if (!cloudApi || !cloudApi.callContainer) {
+    throw new Error("当前环境未提供 wx.cloud.callContainer")
+  }
+
+  return cloudApi.callContainer
+}
+
+function extractDocumentFromResponse(response: CallContainerResponse): ReportDocument {
+  if (response && response.data && "document" in response.data && response.data.document) {
+    return response.data.document
+  }
+
+  if (response && response.data && "title" in response.data && "sections" in response.data) {
+    return response.data as ReportDocument
+  }
+
+  throw new Error("云托管返回的文档结构无效")
+}
+
+async function callCloudRun(
+  path: string,
+  input: DailyGenerateInput | WeeklyGenerateInput,
+  templateSections: TemplateSection[],
+  options: GenerateOptions = {}
+): Promise<ReportDocument> {
+  const runtimeConfig = getRuntimeConfig(options.runtimeConfig)
+  const callContainer = options.callContainer ? options.callContainer : getDefaultCallContainer()
+
+  const response = await callContainer({
+    config: {
+      env: runtimeConfig.cloudEnvId
+    },
+    path,
+    method: "POST",
+    header: {
+      "X-WX-SERVICE": runtimeConfig.cloudServiceName,
+      "content-type": "application/json"
+    },
+    data: input
+  })
+
+  const document = extractDocumentFromResponse(response)
+  const validation = validateGeneratedDocument(document, templateSections)
+
+  if (!validation.valid) {
+    throw new Error(validation.reason ? validation.reason : "云托管返回的内容不符合模板结构")
+  }
+
+  return document
 }
 
 export function validateGeneratedDocument(
@@ -207,4 +296,30 @@ export function generateWeeklyReportDraft(
     title: formatWeeklyTitle(year, week),
     sections
   }
+}
+
+export async function generateDailyReport(
+  input: DailyGenerateInput,
+  options: GenerateOptions = {}
+): Promise<ReportDocument> {
+  const runtimeConfig = getRuntimeConfig(options.runtimeConfig)
+
+  if (isCloudRunEnabled(runtimeConfig)) {
+    return callCloudRun("/api/reports/daily/generate", input, input.templateSections, options)
+  }
+
+  return generateDailyReportDraft(input.rawInput, input.templateSections, input.reportDate)
+}
+
+export async function generateWeeklyReport(
+  input: WeeklyGenerateInput,
+  options: GenerateOptions = {}
+): Promise<ReportDocument> {
+  const runtimeConfig = getRuntimeConfig(options.runtimeConfig)
+
+  if (isCloudRunEnabled(runtimeConfig)) {
+    return callCloudRun("/api/reports/weekly/generate", input, input.templateSections, options)
+  }
+
+  return generateWeeklyReportDraft(input.reports, input.templateSections, input.year, input.week)
 }

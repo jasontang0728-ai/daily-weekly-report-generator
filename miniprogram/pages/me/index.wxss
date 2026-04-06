@@ -1,5 +1,17 @@
 @import "../../app.wxss";
 
+.page-copy {
+  color: #7d7a73;
+}
+
+.section-title {
+  color: #8a7d6d;
+}
+
+.section-text {
+  color: #7d7a73;
+}
+
 .entry-card {
   position: relative;
 }
@@ -10,6 +22,6 @@
   right: 28rpx;
   top: 50%;
   transform: translateY(-50%);
-  color: #8b7d66;
+  color: #8a7d6d;
   font-size: 30rpx;
 }

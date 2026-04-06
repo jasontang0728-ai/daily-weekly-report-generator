@@ -1,5 +1,5 @@
 {
-  "appid": "touristappid",
+  "appid": "wxac55a45ff677dba7",
   "compileType": "miniprogram",
   "miniprogramRoot": "./",
   "srcMiniprogramRoot": "./",
@@ -10,9 +10,62 @@
     "minified": true,
     "urlCheck": false,
     "packNpmRelationList": [],
-    "ignoreUploadUnusedFiles": true,
-    "ignoreDevUnusedFiles": true
+    "ignoreUploadUnusedFiles": false,
+    "ignoreDevUnusedFiles": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "simulatorType": "wechat",
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "file",
+        "value": "package.json"
+      },
+      {
+        "type": "file",
+        "value": "package-lock.json"
+      },
+      {
+        "type": "file",
+        "value": "project.private.config.json"
+      },
+      {
+        "type": "file",
+        "value": "tsconfig.json"
+      },
+      {
+        "type": "file",
+        "value": "vitest.config.mjs"
+      }
+    ],
+    "include": []
+  },
+  "editorSetting": {},
+  "libVersion": "3.15.1"
 }

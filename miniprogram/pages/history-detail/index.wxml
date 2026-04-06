@@ -5,7 +5,10 @@
     <view class="page-copy">历史成品默认只读，支持一键复制。</view>
   </view>
 
-  <doc-preview title="{{title}}" finalText="{{finalText}}" />
+  <view class="preview-shell">
+    <view wx:if="{{finalText}}" class="preview-text">{{finalText}}</view>
+    <view wx:else class="preview-empty">暂时还没有生成内容</view>
+  </view>
 
   <view class="action-row">
     <button class="primary-button" bindtap="handleCopy">复制</button>

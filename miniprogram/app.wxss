@@ -1,7 +1,7 @@
 page {
   min-height: 100%;
   background: linear-gradient(180deg, #f3efe4 0%, #efe7d7 100%);
-  color: #1f2a24;
+  color: #7d7a73;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
@@ -19,14 +19,14 @@ page {
 }
 
 .eyebrow {
-  color: #7e7361;
+  color: #8a7d6d;
   font-size: 24rpx;
   letter-spacing: 4rpx;
 }
 
 .page-title {
   margin-top: 12rpx;
-  color: #16372b;
+  color: #8a7d6d;
   font-size: 44rpx;
   font-weight: 700;
   line-height: 1.25;
@@ -34,34 +34,31 @@ page {
 
 .page-copy {
   margin-top: 18rpx;
-  color: #5c665f;
+  color: #7d7a73;
   font-size: 28rpx;
   line-height: 1.6;
 }
 
 .action-row {
   display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 20rpx;
   margin-top: 28rpx;
 }
 
 .ghost-button,
 .primary-button {
-  flex: 1;
-  border-radius: 999rpx;
-  font-size: 28rpx;
-  line-height: 88rpx;
-}
-
-.ghost-button {
-  background: #f6efe0;
-  color: #1e4d3b;
-  border: 2rpx solid #d8c8ab;
-}
-
-.primary-button {
-  background: #1e4d3b;
-  color: #fffaf1;
+  flex: none;
+  min-width: 152rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+  line-height: 64rpx;
+  background: linear-gradient(135deg, #efe8dd 0%, #e5ddd0 100%);
+  color: #7d756a;
+  border: 2rpx solid rgba(151, 142, 128, 0.22);
+  box-shadow: 0 10rpx 24rpx rgba(116, 108, 93, 0.10);
 }
 
 .section-block {
@@ -72,14 +69,14 @@ page {
 }
 
 .section-title {
-  color: #1e4d3b;
+  color: #8a7d6d;
   font-size: 30rpx;
   font-weight: 700;
 }
 
 .section-text {
   margin-top: 14rpx;
-  color: #4d5951;
+  color: #7d7a73;
   font-size: 27rpx;
   line-height: 1.7;
 }

@@ -1,23 +1,26 @@
 @import "../../app.wxss";
 
-.meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-top: 24rpx;
+.plain-header {
+  margin: 4rpx 0 12rpx;
+  text-align: center;
+  text-transform: uppercase;
 }
 
-.meta-pill {
-  padding: 10rpx 20rpx;
-  border-radius: 999rpx;
-  background: #f6efe0;
-  color: #4b554f;
-  font-size: 24rpx;
+.plain-header-b {
+  color: #8a7d6d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28rpx;
+  font-weight: 700;
+  letter-spacing: 5rpx;
+}
+
+.workspace-panel {
+  margin-top: 10rpx;
 }
 
 .raw-input {
   width: 100%;
-  min-height: 220rpx;
+  min-height: 240rpx;
   margin-top: 16rpx;
   padding: 20rpx;
   box-sizing: border-box;
@@ -33,9 +36,18 @@
   margin-top: 18rpx;
 }
 
-.action-button {
+.compact-action-button {
   flex: none;
-  width: 220rpx;
+  min-width: 152rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #efe8dd 0%, #e5ddd0 100%);
+  border: 2rpx solid rgba(151, 142, 128, 0.22);
+  color: #7d756a;
+  font-size: 24rpx;
+  line-height: 64rpx;
+  font-weight: 700;
+  box-shadow: 0 10rpx 24rpx rgba(116, 108, 93, 0.1);
 }
 
 .editor-card {
@@ -46,7 +58,7 @@
 }
 
 .editor-title {
-  color: #16372b;
+  color: #8a7d6d;
   font-size: 30rpx;
   font-weight: 700;
 }
@@ -63,4 +75,72 @@
 
 .single-button {
   margin-top: 18rpx;
+}
+
+.preview-shell {
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 250, 241, 0.92);
+  box-shadow: 0 20rpx 60rpx rgba(84, 63, 36, 0.06);
+}
+
+.preview-title {
+  color: #8a7d6d;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.preview-text {
+  margin-top: 20rpx;
+  color: #7d7a73;
+  font-size: 28rpx;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.preview-empty {
+  color: #7d7a73;
+  font-size: 28rpx;
+  line-height: 1.7;
+}
+
+.popup-mask {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: rgba(23, 30, 27, 0.38);
+  z-index: 99;
+}
+
+.popup-card {
+  width: 100%;
+  max-height: 80vh;
+  overflow: auto;
+  padding: 28rpx;
+  border-radius: 28rpx;
+  background: #fffaf1;
+}
+
+.popup-title {
+  color: #8a7d6d;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.popup-content {
+  margin-top: 20rpx;
+  color: #7d7a73;
+  font-size: 28rpx;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 28rpx;
 }

@@ -1,4 +1,4 @@
-import { generateDailyReportDraft, validateGeneratedDocument } from "../../lib/services/ai"
+import { generateDailyReport } from "../../lib/services/ai"
 import { createDailyWorkspaceState, finishDailyGeneration, startDailyGeneration } from "../../lib/services/daily-workspace"
 import { getDailyReportByDate, getDailyTemplate, saveDailyReport } from "../../lib/services/db"
 import type { ReportDocument, ReportSection, TemplateSection } from "../../lib/types/report"
@@ -37,7 +37,7 @@ function toDocument(title: string, editorSections: EditorSection[]): ReportDocum
 Page({
   data: {
     title: "日报工作台",
-    hint: "输入今天的工作内容，点击 AI整理，即可生成日报",
+    hint: "输入今天的工作内容，点击 AI 整理，即可生成日报",
     rawInput: "",
     reportDate: "",
     limit: DAILY_INPUT_LIMIT,
@@ -55,9 +55,27 @@ Page({
   },
 
   onShow() {
+    void this.safeLoadPage()
+  },
+
+  async safeLoadPage() {
+    try {
+      await this.loadPage()
+    } catch (error) {
+      console.error("Failed to load daily page.", error)
+      wx.showToast({
+        title: "日报页面加载失败",
+        icon: "none"
+      })
+    }
+  },
+
+  async loadPage() {
     const reportDate = getTodayDateKey()
-    const template = getDailyTemplate()
-    const todayReport = getDailyReportByDate(reportDate)
+    const [template, todayReport] = await Promise.all([
+      getDailyTemplate(),
+      getDailyReportByDate(reportDate)
+    ])
     const workspace = createDailyWorkspaceState(todayReport)
 
     this.setData({
@@ -82,12 +100,12 @@ Page({
     })
   },
 
-  handleGenerate() {
+  async handleGenerate() {
     const validation = validateDailyRawInput(this.data.rawInput)
 
     if (!validation.valid) {
       wx.showToast({
-        title: validation.reason ?? "输入不合法",
+        title: validation.reason ? validation.reason : "输入不合法",
         icon: "none"
       })
       return
@@ -115,36 +133,33 @@ Page({
       isEditing: false
     })
 
-    const draft = generateDailyReportDraft(
-      this.data.rawInput,
-      this.data.templateSections,
-      this.data.reportDate
-    )
-    const structureValidation = validateGeneratedDocument(draft, this.data.templateSections)
+    try {
+      const draft = await generateDailyReport({
+        rawInput: this.data.rawInput,
+        templateSections: this.data.templateSections,
+        reportDate: this.data.reportDate
+      })
+      const nextState = finishDailyGeneration(generatingState, draft)
 
-    if (!structureValidation.valid) {
+      this.setData({
+        mode: nextState.mode,
+        document: draft,
+        previewText: renderReportDocument(draft),
+        editorSections: toEditorSections(draft.sections),
+        disableGenerate: nextState.disableGenerate,
+        disableFinish: nextState.disableFinish
+      })
+    } catch (error) {
       this.setData({
         mode: "input",
         disableGenerate: false,
         disableFinish: true
       })
       wx.showToast({
-        title: "整理失败，请重试",
+        title: error instanceof Error ? error.message : "AI 整理失败，请重试",
         icon: "none"
       })
-      return
     }
-
-    const nextState = finishDailyGeneration(generatingState, draft)
-
-    this.setData({
-      mode: nextState.mode,
-      document: draft,
-      previewText: renderReportDocument(draft),
-      editorSections: toEditorSections(draft.sections),
-      disableGenerate: nextState.disableGenerate,
-      disableFinish: nextState.disableFinish
-    })
   },
 
   handleEdit() {
@@ -176,20 +191,20 @@ Page({
     })
   },
 
-  handleFinish() {
+  async handleFinish() {
     const document = this.data.isEditing
-      ? toDocument(this.data.document?.title ?? "", this.data.editorSections)
+      ? toDocument(this.data.document ? this.data.document.title : "", this.data.editorSections)
       : this.data.document
 
     if (!document) {
       wx.showToast({
-        title: "请先进行 AI整理",
+        title: "请先进行 AI 整理",
         icon: "none"
       })
       return
     }
 
-    const saved = saveDailyReport(this.data.reportDate, document, this.data.templateSections)
+    const saved = await saveDailyReport(this.data.reportDate, document, this.data.templateSections)
 
     this.setData({
       document: saved,
@@ -207,6 +222,23 @@ Page({
   handlePopupClose() {
     this.setData({
       popupVisible: false
+    })
+  },
+
+  noop() {
+    return undefined
+  },
+
+  handlePopupCopy() {
+    if (!this.data.popupText) {
+      return
+    }
+
+    wx.setClipboardData({
+      data: this.data.popupText,
+      success: () => {
+        this.handlePopupCopied()
+      }
     })
   },
 

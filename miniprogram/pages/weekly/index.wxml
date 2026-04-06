@@ -1,24 +1,21 @@
 <view class="page-shell">
-  <view class="hero-card">
-    <view class="eyebrow">WEEKLY WORKSPACE</view>
-    <view class="page-title">{{title}}</view>
-    <view class="page-copy">{{hint}}</view>
-    <view class="meta-row">
-      <view class="meta-pill">{{weekTitle}}</view>
-      <view class="meta-pill">本周日报 {{sourceCount}} 篇</view>
-    </view>
-  </view>
+  <view class="plain-header plain-header-b">WEEKLY WORKSPACE</view>
 
-  <view class="section-block">
+  <view class="section-block workspace-panel">
     <view class="section-title">本周周报</view>
-    <view class="section-text">系统会根据本周已完成日报自动提炼，再保留编辑入口给你补充下周计划。</view>
-    <button class="primary-button single-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">生成本周周报</button>
+    <view class="section-text">{{hint}}</view>
+    <button class="compact-action-button weekly-action-button" disabled="{{disableGenerate}}" bindtap="handleGenerate">生成本周周报</button>
   </view>
 
   <view wx:if="{{document}}" class="section-block">
     <view class="section-title">周报预览</view>
+
     <block wx:if="{{!isEditing}}">
-      <doc-preview title="{{document.title}}" finalText="{{previewText}}" />
+      <view class="preview-shell">
+        <view wx:if="{{document.title}}" class="preview-title">{{document.title}}</view>
+        <view wx:if="{{previewText}}" class="preview-text">{{previewText}}</view>
+        <view wx:else class="preview-empty">暂时还没有生成内容</view>
+      </view>
     </block>
 
     <block wx:if="{{isEditing}}">
@@ -43,11 +40,14 @@
     </view>
   </view>
 
-  <final-popup
-    visible="{{popupVisible}}"
-    title="周报已保存"
-    content="{{popupText}}"
-    bind:close="handlePopupClose"
-    bind:copied="handlePopupCopied"
-  />
+  <view wx:if="{{popupVisible}}" class="popup-mask" bindtap="handlePopupClose">
+    <view class="popup-card" catchtap="noop">
+      <view class="popup-title">周报已保存</view>
+      <view class="popup-content">{{popupText}}</view>
+      <view class="popup-actions">
+        <button class="ghost-button" bindtap="handlePopupClose">关闭</button>
+        <button class="primary-button" bindtap="handlePopupCopy">一键复制</button>
+      </view>
+    </view>
+  </view>
 </view>

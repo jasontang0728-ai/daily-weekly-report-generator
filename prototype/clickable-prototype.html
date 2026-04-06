@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>日报周报自动生成器 - 可点击原型</title>
+  <style>
+    :root {
+      --bg: #efe5d2;
+      --paper: #fff8ef;
+      --ink: #18342a;
+      --muted: #6d736d;
+      --accent: #1f5b46;
+      --accent-soft: #e1efe8;
+      --line: #dccfb9;
+      --danger: #a24d3c;
+      --shadow: 0 24px 80px rgba(59, 45, 24, 0.14);
+      --radius-lg: 26px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --font-title: "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-body: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(300px, 430px) minmax(320px, 520px);
+      gap: 28px;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.42), transparent 28%),
+        linear-gradient(160deg, #f3ead9 0%, #e7dcc6 52%, #deceb1 100%);
+      color: var(--ink);
+      font-family: var(--font-body);
+    }
+
+    .phone {
+      height: 860px;
+      border-radius: 38px;
+      background: #151817;
+      padding: 12px;
+      box-shadow: 0 40px 120px rgba(37, 28, 14, 0.28);
+    }
+
+    .screen {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at top center, rgba(255, 255, 255, 0.28), transparent 22%),
+        linear-gradient(180deg, #f7f0e2 0%, #efe4cf 100%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 24px 10px;
+      font-size: 13px;
+      color: rgba(24, 52, 42, 0.72);
+    }
+
+    .app-view {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .page {
+      display: none;
+      height: 100%;
+      overflow-y: auto;
+      padding: 0 18px 98px;
+      scrollbar-width: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page::-webkit-scrollbar {
+      display: none;
+    }
+
+    .hero {
+      margin-top: 10px;
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 248, 239, 0.92);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(220, 207, 185, 0.7);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #7a776d;
+    }
+
+    h1 {
+      margin: 12px 0 0;
+      font-size: 29px;
+      line-height: 1.2;
+      font-family: var(--font-title);
+    }
+
+    .copy {
+      margin-top: 14px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #59665f;
+    }
+
+    .meta {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: #f3ead9;
+      font-size: 13px;
+      color: #4c554f;
+      border: 1px solid rgba(220, 207, 185, 0.92);
+    }
+
+    .card {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 248, 239, 0.88);
+      border: 1px solid rgba(220, 207, 185, 0.72);
+      box-shadow: 0 16px 50px rgba(59, 45, 24, 0.08);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .small {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    textarea,
+    .editor-box {
+      width: 100%;
+      margin-top: 14px;
+      border: 1px solid rgba(218, 205, 183, 0.95);
+      background: #fffdf8;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      min-height: 120px;
+      font: inherit;
+      color: var(--ink);
+      resize: none;
+      outline: none;
+    }
+
+    .editor-box {
+      min-height: 94px;
+      white-space: pre-wrap;
+      line-height: 1.65;
+    }
+
+    .counter-row,
+    .action-row {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .button-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      transition: transform 0.15s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fffaf1;
+      box-shadow: 0 12px 28px rgba(31, 91, 70, 0.24);
+    }
+
+    .ghost {
+      background: #f2eadc;
+      color: var(--accent);
+      border: 1px solid rgba(199, 182, 154, 0.95);
+    }
+
+    .mini {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .danger {
+      color: var(--danger);
+    }
+
+    .doc {
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 20px;
+      background: #fffdf8;
+      border: 1px solid rgba(216, 203, 180, 0.9);
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.85;
+    }
+
+    .editor-group {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #fffdf8;
+      border: 1px solid rgba(216, 203, 180, 0.88);
+    }
+
+    .editor-group h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .list {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .list-item {
+      position: relative;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 248, 239, 0.92);
+      border: 1px solid rgba(220, 207, 185, 0.72);
+      box-shadow: 0 12px 36px rgba(59, 45, 24, 0.08);
+      cursor: pointer;
+    }
+
+    .list-item::after {
+      content: ">";
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8a7e6a;
+    }
+
+    .list-item-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .list-item-subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .tabbar {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      padding: 10px 12px 18px;
+      gap: 8px;
+      background: rgba(255, 250, 241, 0.9);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(220, 207, 185, 0.78);
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 10px;
+      border-radius: 18px;
+      color: #756f65;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(16, 20, 18, 0.35);
+      z-index: 20;
+    }
+
+    .overlay.visible {
+      display: flex;
+    }
+
+    .sheet {
+      width: 100%;
+      max-height: 72%;
+      overflow: auto;
+      border-radius: 28px;
+      background: #fffaf1;
+      padding: 20px;
+      box-shadow: 0 28px 90px rgba(34, 27, 16, 0.25);
+    }
+
+    .sheet-title {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .sheet-copy {
+      margin-top: 14px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.85;
+      color: #33423b;
+    }
+
+    .notes {
+      padding: 24px;
+      border-radius: 30px;
+      background: rgba(255, 250, 241, 0.84);
+      border: 1px solid rgba(220, 207, 185, 0.7);
+      box-shadow: var(--shadow);
+      align-self: stretch;
+      overflow: auto;
+    }
+
+    .notes h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .notes p {
+      margin: 14px 0 0;
+      color: #56645d;
+      line-height: 1.75;
+    }
+
+    .legend {
+      display: grid;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .legend-item {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: #fffdf8;
+      border: 1px solid rgba(220, 207, 185, 0.72);
+    }
+
+    .legend-item strong {
+      display: block;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .legend-item span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .hint-block {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #1f5b46 0%, #2c7158 100%);
+      color: #fffaf1;
+    }
+
+    .hint-block p {
+      margin: 8px 0 0;
+      color: rgba(255, 250, 241, 0.88);
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        grid-template-columns: 1fr;
+        justify-items: center;
+      }
+
+      .notes {
+        width: min(100%, 620px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="screen">
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>日报周报助手</span>
+        <span>100%</span>
+      </div>
+
+      <div class="app-view">
+        <section class="page active" data-page="daily">
+          <div class="hero">
+            <div class="eyebrow">Daily Workspace</div>
+            <h1>日报工作台</h1>
+            <div class="copy">输入今天的工作内容，点击 AI整理，即可生成日报。</div>
+            <div class="meta">
+              <span class="pill">2026-04-04</span>
+              <span class="pill">当前模板 3 栏</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">原始输入</div>
+            <textarea id="dailyInput">今天完成了登录页调整，联调了两个接口，处理中出现了权限报错，明天继续测试登录流程并补充异常场景验证。</textarea>
+            <div class="counter-row">
+              <span class="small"><span id="dailyCount">55</span> / 500</span>
+              <button class="primary" id="generateDaily">AI整理</button>
+            </div>
+          </div>
+
+          <div class="card" id="dailyPreviewCard" style="display:none;">
+            <div class="card-title">生成结果预览</div>
+            <div class="doc" id="dailyPreview"></div>
+            <div class="button-row" id="dailyPreviewActions">
+              <button class="ghost" id="editDaily">编辑</button>
+              <button class="primary" id="finishDaily">完成</button>
+            </div>
+
+            <div id="dailyEditor" style="display:none;">
+              <div class="editor-group">
+                <h3>今日完成</h3>
+                <textarea id="dailyDoneEditor">完成登录页调整
+联调两个后端接口</textarea>
+              </div>
+              <div class="editor-group">
+                <h3>问题风险</h3>
+                <textarea id="dailyRiskEditor">联调过程中出现权限报错</textarea>
+              </div>
+              <div class="editor-group">
+                <h3>明日计划</h3>
+                <textarea id="dailyPlanEditor">继续测试登录流程
+补充异常场景验证</textarea>
+              </div>
+              <div class="button-row">
+                <button class="ghost" id="cancelDailyEdit">取消编辑</button>
+                <button class="primary" id="finishDailyEdited">完成</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="weekly">
+          <div class="hero">
+            <div class="eyebrow">Weekly Workspace</div>
+            <h1>周报工作台</h1>
+            <div class="copy">点击生成本周周报，系统会根据本周日报自动提炼内容。</div>
+            <div class="meta">
+              <span class="pill">2026年第14周</span>
+              <span class="pill">本周日报 2 篇</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">本周周报</div>
+            <div class="small">结果会优先按项目或事项归并，避免把周报写成按天拼接的流水账。</div>
+            <button class="primary" style="margin-top: 18px;" id="generateWeekly">生成本周周报</button>
+          </div>
+
+          <div class="card" id="weeklyPreviewCard" style="display:none;">
+            <div class="card-title">周报预览</div>
+            <div class="doc" id="weeklyPreview"></div>
+            <div class="button-row" id="weeklyPreviewActions">
+              <button class="ghost" id="editWeekly">编辑</button>
+              <button class="primary" id="finishWeekly">完成</button>
+            </div>
+
+            <div id="weeklyEditor" style="display:none;">
+              <div class="editor-group">
+                <h3>本周完成</h3>
+                <textarea id="weeklyDoneEditor">完成登录页调整并推进接口联调
+整理日报与周报工作台原型</textarea>
+              </div>
+              <div class="editor-group">
+                <h3>问题风险</h3>
+                <textarea id="weeklyRiskEditor">本周联调过程中出现权限异常，已定位处理</textarea>
+              </div>
+              <div class="editor-group">
+                <h3>下周计划</h3>
+                <textarea id="weeklyPlanEditor">补充异常场景验证
+继续推进 AI 受控后端接入</textarea>
+              </div>
+              <div class="button-row">
+                <button class="ghost" id="cancelWeeklyEdit">取消编辑</button>
+                <button class="primary" id="finishWeeklyEdited">完成</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="me">
+          <div class="hero">
+            <div class="eyebrow">My Space</div>
+            <h1>我的</h1>
+            <div class="copy">历史记录和模板管理统一收在这里，首页始终保持操作聚焦。</div>
+          </div>
+
+          <div class="list">
+            <div class="list-item" data-target="history-daily">
+              <div class="list-item-title">日报历史</div>
+              <div class="list-item-subtitle">查看已完成日报并复制成品</div>
+            </div>
+            <div class="list-item" data-target="history-weekly">
+              <div class="list-item-title">周报历史</div>
+              <div class="list-item-subtitle">查看已完成周报并复制成品</div>
+            </div>
+            <div class="list-item" data-target="template-daily">
+              <div class="list-item-title">日报模板管理</div>
+              <div class="list-item-subtitle">编辑栏目名称、数量和顺序</div>
+            </div>
+            <div class="list-item" data-target="template-weekly">
+              <div class="list-item-title">周报模板管理</div>
+              <div class="list-item-subtitle">调整周报结构与文案骨架</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="history-daily">
+          <div class="hero">
+            <div class="eyebrow">History</div>
+            <h1>日报历史</h1>
+            <div class="copy">列表只展示标题和日期，点进详情后可直接复制成品。</div>
+          </div>
+
+          <div class="list">
+            <div class="list-item" data-target="history-daily-detail">
+              <div class="list-item-title">2026年4月4日日报</div>
+              <div class="list-item-subtitle">2026-04-04</div>
+            </div>
+            <div class="list-item">
+              <div class="list-item-title">2026年4月3日日报</div>
+              <div class="list-item-subtitle">2026-04-03</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="history-weekly">
+          <div class="hero">
+            <div class="eyebrow">History</div>
+            <h1>周报历史</h1>
+            <div class="copy">历史周报默认只读，保留正式成品感。</div>
+          </div>
+
+          <div class="list">
+            <div class="list-item" data-target="history-weekly-detail">
+              <div class="list-item-title">2026年第14周周报</div>
+              <div class="list-item-subtitle">2026-W14</div>
+            </div>
+            <div class="list-item">
+              <div class="list-item-title">2026年第13周周报</div>
+              <div class="list-item-subtitle">2026-W13</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="history-daily-detail">
+          <div class="hero">
+            <div class="eyebrow">Archive</div>
+            <h1>2026年4月4日日报</h1>
+            <div class="copy">历史成品默认只读，只保留复制按钮。</div>
+          </div>
+
+          <div class="card">
+            <div class="doc" id="dailyHistoryDoc"></div>
+            <div class="button-row">
+              <button class="primary" id="copyDailyHistory">复制</button>
+              <button class="ghost" data-target="history-daily">返回历史</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="history-weekly-detail">
+          <div class="hero">
+            <div class="eyebrow">Archive</div>
+            <h1>2026年第14周周报</h1>
+            <div class="copy">周报历史同样只读，保留正式文档的观感。</div>
+          </div>
+
+          <div class="card">
+            <div class="doc" id="weeklyHistoryDoc"></div>
+            <div class="button-row">
+              <button class="primary" id="copyWeeklyHistory">复制</button>
+              <button class="ghost" data-target="history-weekly">返回历史</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" data-page="template-daily">
+          <div class="hero">
+            <div class="eyebrow">Template</div>
+            <h1>日报模板管理</h1>
+            <div class="copy">支持新增、删除、重命名和排序。历史成品不会受后续模板修改影响。</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">当前模板</div>
+            <div class="list" style="margin-top: 16px;">
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 1 · 今日完成</div>
+                <div class="button-row">
+                  <button class="ghost mini">上移</button>
+                  <button class="ghost mini">下移</button>
+                  <button class="ghost mini">重命名</button>
+                  <button class="ghost mini danger">删除</button>
+                </div>
+              </div>
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 2 · 问题风险</div>
+                <div class="button-row">
+                  <button class="ghost mini">上移</button>
+                  <button class="ghost mini">下移</button>
+                  <button class="ghost mini">重命名</button>
+                  <button class="ghost mini danger">删除</button>
+                </div>
+              </div>
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 3 · 明日计划</div>
+                <div class="button-row">
+                  <button class="ghost mini">上移</button>
+                  <button class="ghost mini">下移</button>
+                  <button class="ghost mini">重命名</button>
+                  <button class="ghost mini danger">删除</button>
+                </div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="ghost" id="templateAddDaily">新增栏目</button>
+              <button class="primary" id="templateSaveDaily">保存模板</button>
+            </div>
+            <button class="ghost" style="margin-top: 12px; width: 100%;" data-target="me">返回我的</button>
+          </div>
+        </section>
+
+        <section class="page" data-page="template-weekly">
+          <div class="hero">
+            <div class="eyebrow">Template</div>
+            <h1>周报模板管理</h1>
+            <div class="copy">周报模板默认三栏，也支持增删改排，但最多 6 个栏目。</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">当前模板</div>
+            <div class="list" style="margin-top: 16px;">
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 1 · 本周完成</div>
+              </div>
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 2 · 问题风险</div>
+              </div>
+              <div class="list-item" style="cursor: default;">
+                <div class="list-item-title">栏目 3 · 下周计划</div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="ghost" id="templateAddWeekly">新增栏目</button>
+              <button class="primary" id="templateSaveWeekly">保存模板</button>
+            </div>
+            <button class="ghost" style="margin-top: 12px; width: 100%;" data-target="me">返回我的</button>
+          </div>
+        </section>
+
+        <div class="tabbar">
+          <div class="tab active" data-target="daily">日报</div>
+          <div class="tab" data-target="weekly">周报</div>
+          <div class="tab" data-target="me">我的</div>
+        </div>
+
+        <div class="overlay" id="sheet">
+          <div class="sheet">
+            <div class="sheet-title" id="sheetTitle">已保存</div>
+            <div class="sheet-copy" id="sheetContent"></div>
+            <div class="button-row">
+              <button class="ghost" id="closeSheet">关闭</button>
+              <button class="primary" id="copySheet">一键复制</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes">
+    <h2>可点击 HTML 原型</h2>
+    <p>这个原型模拟了微信小程序里的核心主链路。它不是正式实现代码，而是给你快速确认页面层级、按钮关系和完成弹窗的。</p>
+
+    <div class="legend">
+      <div class="legend-item">
+        <strong>你可以直接点的地方</strong>
+        <span>`日报 / 周报 / 我的` 底部 Tab、日报与周报的 `AI整理 / 生成 / 编辑 / 完成`、我的页入口、历史详情返回、模板页返回。</span>
+      </div>
+      <div class="legend-item">
+        <strong>模拟了什么</strong>
+        <span>日报生成预览、结构化编辑、完成弹窗、周报生成与编辑、历史查看、模板管理入口。</span>
+      </div>
+      <div class="legend-item">
+        <strong>刻意没做什么</strong>
+        <span>没有接真实后端，没有做真实输入校验和数据库保存，只模拟你最关心的窗口操作感。</span>
+      </div>
+    </div>
+
+    <div class="hint-block">
+      <strong>建议你重点看这 4 个点</strong>
+      <p>1. 首页是否足够聚焦。</p>
+      <p>2. 周报页是否比日报轻一点但仍可编辑。</p>
+      <p>3. “我的”页作为二级入口是否清爽。</p>
+      <p>4. 完成后的弹窗成品感够不够。</p>
+    </div>
+  </aside>
+
+  <script>
+    const pages = Array.from(document.querySelectorAll(".page"));
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const sheet = document.getElementById("sheet");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetContent = document.getElementById("sheetContent");
+    const dailyInput = document.getElementById("dailyInput");
+    const dailyCount = document.getElementById("dailyCount");
+    const dailyPreviewCard = document.getElementById("dailyPreviewCard");
+    const dailyPreview = document.getElementById("dailyPreview");
+    const dailyEditor = document.getElementById("dailyEditor");
+    const weeklyPreviewCard = document.getElementById("weeklyPreviewCard");
+    const weeklyPreview = document.getElementById("weeklyPreview");
+    const weeklyEditor = document.getElementById("weeklyEditor");
+    const dailyHistoryDoc = document.getElementById("dailyHistoryDoc");
+    const weeklyHistoryDoc = document.getElementById("weeklyHistoryDoc");
+
+    let latestDailyDoc = "";
+    let latestWeeklyDoc = "";
+
+    function setActivePage(name) {
+      pages.forEach((page) => {
+        page.classList.toggle("active", page.dataset.page === name);
+      });
+
+      tabs.forEach((tab) => {
+        const isMain = ["daily", "weekly", "me"].includes(name);
+        tab.classList.toggle("active", isMain && tab.dataset.target === name);
+      });
+    }
+
+    function openSheet(title, content) {
+      sheetTitle.textContent = title;
+      sheetContent.textContent = content;
+      sheet.classList.add("visible");
+    }
+
+    function closeSheet() {
+      sheet.classList.remove("visible");
+    }
+
+    function buildDailyDoc(done, risk, plan) {
+      return `2026年4月4日日报
+
+一、今日完成
+1. ${done[0] || "无"}
+${done[1] ? `2. ${done[1]}` : ""}
+
+二、问题风险
+1. ${risk[0] || "无"}
+
+三、明日计划
+1. ${plan[0] || "无"}
+${plan[1] ? `2. ${plan[1]}` : ""}`.trim();
+    }
+
+    function buildWeeklyDoc(done, risk, plan) {
+      return `2026年第14周周报
+
+一、本周完成
+1. ${done[0] || "无"}
+${done[1] ? `2. ${done[1]}` : ""}
+
+二、问题风险
+1. ${risk[0] || "无"}
+
+三、下周计划
+1. ${plan[0] || "无"}
+${plan[1] ? `2. ${plan[1]}` : ""}`.trim();
+    }
+
+    function renderGeneratedDaily() {
+      latestDailyDoc = buildDailyDoc(
+        ["完成登录页调整", "联调两个后端接口"],
+        ["联调过程中出现权限报错"],
+        ["继续测试登录流程", "补充异常场景验证"]
+      );
+      dailyPreview.textContent = latestDailyDoc;
+      dailyHistoryDoc.textContent = latestDailyDoc;
+      dailyPreviewCard.style.display = "block";
+      dailyEditor.style.display = "none";
+    }
+
+    function renderEditedDaily() {
+      const done = document.getElementById("dailyDoneEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+      const risk = document.getElementById("dailyRiskEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+      const plan = document.getElementById("dailyPlanEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+
+      latestDailyDoc = buildDailyDoc(done, risk, plan);
+      dailyPreview.textContent = latestDailyDoc;
+      dailyHistoryDoc.textContent = latestDailyDoc;
+      dailyEditor.style.display = "none";
+    }
+
+    function renderGeneratedWeekly() {
+      latestWeeklyDoc = buildWeeklyDoc(
+        ["完成登录页调整并推进接口联调", "整理日报与周报工作台原型"],
+        ["本周联调过程中出现权限异常，已定位处理"],
+        ["补充异常场景验证", "继续推进 AI 受控后端接入"]
+      );
+      weeklyPreview.textContent = latestWeeklyDoc;
+      weeklyHistoryDoc.textContent = latestWeeklyDoc;
+      weeklyPreviewCard.style.display = "block";
+      weeklyEditor.style.display = "none";
+    }
+
+    function renderEditedWeekly() {
+      const done = document.getElementById("weeklyDoneEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+      const risk = document.getElementById("weeklyRiskEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+      const plan = document.getElementById("weeklyPlanEditor").value.split("\n").map(v => v.trim()).filter(Boolean);
+
+      latestWeeklyDoc = buildWeeklyDoc(done, risk, plan);
+      weeklyPreview.textContent = latestWeeklyDoc;
+      weeklyHistoryDoc.textContent = latestWeeklyDoc;
+      weeklyEditor.style.display = "none";
+    }
+
+    dailyInput.addEventListener("input", () => {
+      dailyCount.textContent = dailyInput.value.length;
+    });
+
+    document.getElementById("generateDaily").addEventListener("click", () => {
+      renderGeneratedDaily();
+    });
+
+    document.getElementById("editDaily").addEventListener("click", () => {
+      dailyEditor.style.display = "block";
+    });
+
+    document.getElementById("cancelDailyEdit").addEventListener("click", () => {
+      dailyEditor.style.display = "none";
+    });
+
+    document.getElementById("finishDaily").addEventListener("click", () => {
+      if (!latestDailyDoc) renderGeneratedDaily();
+      openSheet("日报已保存", latestDailyDoc);
+    });
+
+    document.getElementById("finishDailyEdited").addEventListener("click", () => {
+      renderEditedDaily();
+      openSheet("日报已保存", latestDailyDoc);
+    });
+
+    document.getElementById("generateWeekly").addEventListener("click", () => {
+      renderGeneratedWeekly();
+    });
+
+    document.getElementById("editWeekly").addEventListener("click", () => {
+      weeklyEditor.style.display = "block";
+    });
+
+    document.getElementById("cancelWeeklyEdit").addEventListener("click", () => {
+      weeklyEditor.style.display = "none";
+    });
+
+    document.getElementById("finishWeekly").addEventListener("click", () => {
+      if (!latestWeeklyDoc) renderGeneratedWeekly();
+      openSheet("周报已保存", latestWeeklyDoc);
+    });
+
+    document.getElementById("finishWeeklyEdited").addEventListener("click", () => {
+      renderEditedWeekly();
+      openSheet("周报已保存", latestWeeklyDoc);
+    });
+
+    document.querySelectorAll("[data-target]").forEach((node) => {
+      node.addEventListener("click", () => {
+        setActivePage(node.dataset.target);
+      });
+    });
+
+    document.getElementById("closeSheet").addEventListener("click", closeSheet);
+    sheet.addEventListener("click", (event) => {
+      if (event.target === sheet) closeSheet();
+    });
+
+    document.getElementById("copySheet").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(sheetContent.textContent || "");
+        document.getElementById("copySheet").textContent = "已复制";
+        setTimeout(() => {
+          document.getElementById("copySheet").textContent = "一键复制";
+        }, 1200);
+      } catch (error) {
+        alert("浏览器阻止了复制，可以手动选中文本。");
+      }
+    });
+
+    document.getElementById("copyDailyHistory").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(dailyHistoryDoc.textContent || "");
+        alert("日报历史已复制");
+      } catch (error) {
+        alert("浏览器阻止了复制，可以手动选中文本。");
+      }
+    });
+
+    document.getElementById("copyWeeklyHistory").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(weeklyHistoryDoc.textContent || "");
+        alert("周报历史已复制");
+      } catch (error) {
+        alert("浏览器阻止了复制，可以手动选中文本。");
+      }
+    });
+
+    document.getElementById("templateAddDaily").addEventListener("click", () => {
+      alert("这里模拟新增栏目弹窗，正式产品里会弹出输入框。");
+    });
+
+    document.getElementById("templateAddWeekly").addEventListener("click", () => {
+      alert("这里模拟新增栏目弹窗，正式产品里会弹出输入框。");
+    });
+
+    document.getElementById("templateSaveDaily").addEventListener("click", () => {
+      alert("日报模板已保存");
+    });
+
+    document.getElementById("templateSaveWeekly").addEventListener("click", () => {
+      alert("周报模板已保存");
+    });
+
+    renderGeneratedDaily();
+    renderGeneratedWeekly();
+  </script>
+</body>
+</html>
