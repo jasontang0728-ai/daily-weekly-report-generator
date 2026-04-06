@@ -10,7 +10,9 @@ App({
     onLaunch() {
         const runtimeConfig = (0, runtime_1.getRuntimeConfig)();
         const cloudApi = typeof wx !== "undefined" ? wx.cloud : undefined;
-        const shouldInitCloud = (0, runtime_1.isCloudDatabaseEnabled)(runtimeConfig) || (0, runtime_1.isCloudRunEnabled)(runtimeConfig);
+        const shouldInitCloud = (0, runtime_1.isCloudDatabaseEnabled)(runtimeConfig)
+            || (0, runtime_1.isCloudRunEnabled)(runtimeConfig)
+            || (0, runtime_1.isCloudAIEnabled)(runtimeConfig);
         this.globalData.runtimeConfig = runtimeConfig;
         if (!shouldInitCloud || !cloudApi || typeof cloudApi.init !== "function") {
             return;

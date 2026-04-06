@@ -1,4 +1,4 @@
-import { getRuntimeConfig, isCloudDatabaseEnabled, isCloudRunEnabled } from "./lib/config/runtime"
+import { getRuntimeConfig, isCloudAIEnabled, isCloudDatabaseEnabled, isCloudRunEnabled } from "./lib/config/runtime"
 
 App<IAppOption>({
   globalData: {
@@ -10,7 +10,10 @@ App<IAppOption>({
   onLaunch() {
     const runtimeConfig = getRuntimeConfig()
     const cloudApi = typeof wx !== "undefined" ? wx.cloud : undefined
-    const shouldInitCloud = isCloudDatabaseEnabled(runtimeConfig) || isCloudRunEnabled(runtimeConfig)
+    const shouldInitCloud =
+      isCloudDatabaseEnabled(runtimeConfig) ||
+      isCloudRunEnabled(runtimeConfig) ||
+      isCloudAIEnabled(runtimeConfig)
 
     this.globalData.runtimeConfig = runtimeConfig
 

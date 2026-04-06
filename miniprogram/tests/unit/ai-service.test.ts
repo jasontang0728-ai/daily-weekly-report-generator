@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest"
 
 import type { ReportDocument, TemplateSection } from "../../lib/types/report"
 import {
+  AIContentValidationError,
   generateDailyReport,
   generateDailyReportDraft,
   generateWeeklyReport,
@@ -38,6 +39,213 @@ function makeDailyDocument(
 }
 
 describe("ai service", () => {
+  test("uses cloud ai when runtime config enables cloud ai", async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              title: "AI daily report",
+              sections: [
+                { name: "今日完成", order: 1, items: ["完成真实 AI 接入"] },
+                { name: "问题风险", order: 2, items: ["无"] },
+                { name: "明日计划", order: 3, items: ["继续验证周报生成"] }
+              ]
+            })
+          }
+        }
+      ]
+    })
+
+    const createModel = vi.fn().mockReturnValue({ generateText })
+
+    const document = await generateDailyReport(
+      {
+        rawInput: "今天完成真实 AI 接入，明天继续验证周报生成。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-06"
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "cloud1-7g772au1b225ae1b",
+          useCloudAI: true,
+          useCloudRun: false
+        },
+        createModel
+      }
+    )
+
+    expect(createModel).toHaveBeenCalledWith("deepseek")
+    expect(generateText).toHaveBeenCalledWith({
+      model: "deepseek-v3.2",
+      messages: expect.any(Array)
+    })
+    expect(document.title).toBe("AI daily report")
+  })
+
+  test("parses json wrapped in code fences from cloud ai", async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: [
+              "```json",
+              JSON.stringify({
+                title: "AI fenced report",
+                sections: [
+                  { name: "今日完成", order: 1, items: ["完成联调"] },
+                  { name: "问题风险", order: 2, items: ["无"] },
+                  { name: "明日计划", order: 3, items: ["继续验证"] }
+                ]
+              }),
+              "```"
+            ].join("\n")
+          }
+        }
+      ]
+    })
+
+    const createModel = vi.fn().mockReturnValue({ generateText })
+
+    const document = await generateDailyReport(
+      {
+        rawInput: "今天完成联调，明天继续验证。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-06"
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "cloud1-7g772au1b225ae1b",
+          useCloudAI: true,
+          useCloudRun: false
+        },
+        createModel
+      }
+    )
+
+    expect(document.title).toBe("AI fenced report")
+    expect(document.sections).toHaveLength(3)
+  })
+
+  test("rejects cloud ai output that is valid json but does not match template", async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              title: "Invalid template output",
+              sections: [
+                { name: "完成事项", order: 1, items: ["完成联调"] }
+              ]
+            })
+          }
+        }
+      ]
+    })
+
+    const createModel = vi.fn().mockReturnValue({ generateText })
+
+    await expect(
+      generateDailyReport(
+        {
+          rawInput: "今天完成联调。",
+          templateSections: dailyTemplate,
+          reportDate: "2026-04-06"
+        },
+        {
+          runtimeConfig: {
+            cloudEnvId: "cloud1-7g772au1b225ae1b",
+            useCloudAI: true,
+            useCloudRun: true,
+            cloudServiceName: "report-ai"
+          },
+          createModel,
+          callContainer: vi.fn()
+        }
+      )
+    ).rejects.toBeInstanceOf(AIContentValidationError)
+  })
+
+  test("falls back to cloud run when cloud ai is unavailable", async () => {
+    const callContainer = vi.fn().mockResolvedValue({
+      data: {
+        document: {
+          title: "CloudRun fallback report",
+          sections: [
+            { name: "今日完成", order: 1, items: ["CloudRun 兜底成功"] },
+            { name: "问题风险", order: 2, items: ["无"] },
+            { name: "明日计划", order: 3, items: ["继续验证"] }
+          ]
+        }
+      }
+    })
+
+    const createModel = vi.fn(() => {
+      throw new Error("当前环境未提供 wx.cloud.extend.AI")
+    })
+
+    const document = await generateDailyReport(
+      {
+        rawInput: "今天完成联调，明天继续验证。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-06"
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "cloud1-7g772au1b225ae1b",
+          cloudServiceName: "report-ai",
+          useCloudAI: true,
+          useCloudRun: true
+        },
+        createModel,
+        callContainer
+      }
+    )
+
+    expect(callContainer).toHaveBeenCalled()
+    expect(document.title).toBe("CloudRun fallback report")
+  })
+
+  test("falls back to cloud run when cloud ai returns empty content", async () => {
+    const callContainer = vi.fn().mockResolvedValue({
+      data: {
+        document: {
+          title: "CloudRun empty fallback",
+          sections: [
+            { name: "今日完成", order: 1, items: ["回退成功"] },
+            { name: "问题风险", order: 2, items: ["无"] },
+            { name: "明日计划", order: 3, items: ["继续验证"] }
+          ]
+        }
+      }
+    })
+
+    const createModel = vi.fn().mockReturnValue({
+      generateText: vi.fn().mockResolvedValue({ choices: [] })
+    })
+
+    const document = await generateDailyReport(
+      {
+        rawInput: "今天完成联调，明天继续验证。",
+        templateSections: dailyTemplate,
+        reportDate: "2026-04-06"
+      },
+      {
+        runtimeConfig: {
+          cloudEnvId: "cloud1-7g772au1b225ae1b",
+          cloudServiceName: "report-ai",
+          useCloudAI: true,
+          useCloudRun: true
+        },
+        createModel,
+        callContainer
+      }
+    )
+
+    expect(callContainer).toHaveBeenCalled()
+    expect(document.sections[0].items[0]).toBe("回退成功")
+  })
+
   test("calls cloud run through callContainer when runtime config enables cloud mode", async () => {
     const callContainer = vi.fn().mockResolvedValue({
       data: {
@@ -62,7 +270,8 @@ describe("ai service", () => {
         runtimeConfig: {
           cloudEnvId: "test-123",
           cloudServiceName: "report-ai",
-          useCloudRun: true
+          useCloudRun: true,
+          useCloudAI: false
         },
         callContainer
       }
@@ -103,7 +312,9 @@ describe("ai service", () => {
       {
         runtimeConfig: {
           cloudEnvId: "",
-          cloudServiceName: ""
+          cloudServiceName: "",
+          useCloudAI: false,
+          useCloudRun: false
         }
       }
     )

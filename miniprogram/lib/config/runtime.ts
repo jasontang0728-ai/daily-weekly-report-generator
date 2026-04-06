@@ -3,6 +3,7 @@ export interface RuntimeConfig {
   cloudServiceName: string
   useCloudDatabase: boolean
   useCloudRun: boolean
+  useCloudAI: boolean
   requestTimeoutMs: number
 }
 
@@ -11,6 +12,7 @@ const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
   cloudServiceName: "daily-weekly-report-api",
   useCloudDatabase: true,
   useCloudRun: true,
+  useCloudAI: true,
   requestTimeoutMs: 15000
 }
 
@@ -27,4 +29,8 @@ export function isCloudDatabaseEnabled(config: RuntimeConfig): boolean {
 
 export function isCloudRunEnabled(config: RuntimeConfig): boolean {
   return config.useCloudRun && Boolean(config.cloudEnvId) && Boolean(config.cloudServiceName)
+}
+
+export function isCloudAIEnabled(config: RuntimeConfig): boolean {
+  return config.useCloudAI && Boolean(config.cloudEnvId)
 }

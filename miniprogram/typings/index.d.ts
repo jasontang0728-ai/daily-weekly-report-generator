@@ -7,6 +7,7 @@ declare global {
         cloudServiceName: string
         useCloudDatabase: boolean
         useCloudRun: boolean
+        useCloudAI: boolean
         requestTimeoutMs: number
       }
       cloudReady: boolean

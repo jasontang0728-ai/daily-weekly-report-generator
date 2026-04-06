@@ -1,4 +1,5 @@
-import { getRuntimeConfig, isCloudRunEnabled, type RuntimeConfig } from "../config/runtime"
+import { getScenarioModelPreset, type AIScenario } from "../config/ai-models"
+import { getRuntimeConfig, isCloudAIEnabled, isCloudRunEnabled, type RuntimeConfig } from "../config/runtime"
 import type { ReportDocument, ReportSection, TemplateSection, ValidationResult } from "../types/report"
 import { formatDailyTitle, formatWeeklyTitle } from "../utils/date"
 
@@ -22,6 +23,7 @@ interface WeeklyGenerateInput {
 interface GenerateOptions {
   runtimeConfig?: Partial<RuntimeConfig>
   callContainer?: CallContainer
+  createModel?: (provider: string) => CloudAIModelInstance
 }
 
 interface CallContainerRequest {
@@ -41,6 +43,36 @@ interface CallContainerResponse {
 }
 
 type CallContainer = (request: CallContainerRequest) => Promise<CallContainerResponse>
+
+interface CloudAIGenerateTextResult {
+  choices?: Array<{
+    message?: {
+      content?: string
+    }
+  }>
+  text?: string
+}
+
+interface CloudAIModelInstance {
+  generateText(options: {
+    model: string
+    messages: ICloud.ICloudAIChatMessage[]
+  }): Promise<CloudAIGenerateTextResult>
+}
+
+export class AIRuntimeUnavailableError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "AIRuntimeUnavailableError"
+  }
+}
+
+export class AIContentValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "AIContentValidationError"
+  }
+}
 
 function splitRawInput(rawInput: string): string[] {
   return rawInput
@@ -108,6 +140,10 @@ function uniqueItems(items: string[]): string[] {
   })
 }
 
+function sortTemplateSections(sections: TemplateSection[]): TemplateSection[] {
+  return sections.slice().sort((left, right) => left.order - right.order)
+}
+
 function getDefaultCallContainer(): CallContainer {
   const cloudApi = typeof wx === "undefined"
     ? undefined
@@ -120,6 +156,17 @@ function getDefaultCallContainer(): CallContainer {
   return cloudApi.callContainer
 }
 
+function getDefaultCreateModel() {
+  const cloudApi = typeof wx === "undefined" ? undefined : wx.cloud
+  const createModel = cloudApi?.extend?.AI?.createModel
+
+  if (!createModel) {
+    throw new AIRuntimeUnavailableError("当前环境未提供 wx.cloud.extend.AI")
+  }
+
+  return createModel as unknown as (provider: string) => CloudAIModelInstance
+}
+
 function extractDocumentFromResponse(response: CallContainerResponse): ReportDocument {
   if (response && response.data && "document" in response.data && response.data.document) {
     return response.data.document
@@ -130,6 +177,180 @@ function extractDocumentFromResponse(response: CallContainerResponse): ReportDoc
   }
 
   throw new Error("云托管返回的文档结构无效")
+}
+
+function buildDailyMessages(input: DailyGenerateInput): ICloud.ICloudAIChatMessage[] {
+  const orderedSections = sortTemplateSections(input.templateSections)
+  const sectionNames = orderedSections.map((section) => section.name)
+
+  return [
+    {
+      role: "system",
+      content: [
+        "你是日报生成助手。",
+        "请严格按照给定模板输出 JSON。",
+        "不要输出 markdown，不要输出解释，只输出 JSON。",
+        "JSON 结构必须为：",
+        "{\"title\":\"...\",\"sections\":[{\"name\":\"栏目名\",\"order\":1,\"items\":[\"条目1\"]}]}",
+        `栏目顺序必须是：${sectionNames.join("、")}`,
+        "title 必须是完整日报标题。",
+        "sections 必须包含全部栏目，顺序不能变。",
+        "无内容栏目请输出 items:[\"无\"]。"
+      ].join("\n")
+    },
+    {
+      role: "user",
+      content: JSON.stringify({
+        reportDate: input.reportDate,
+        templateSections: orderedSections,
+        rawInput: input.rawInput
+      })
+    }
+  ]
+}
+
+function buildWeeklyMessages(input: WeeklyGenerateInput): ICloud.ICloudAIChatMessage[] {
+  const orderedSections = sortTemplateSections(input.templateSections)
+  const sectionNames = orderedSections.map((section) => section.name)
+
+  return [
+    {
+      role: "system",
+      content: [
+        "你是周报生成助手。",
+        "请基于日报列表提炼周报，并严格输出 JSON。",
+        "不要输出 markdown，不要输出解释，只输出 JSON。",
+        "JSON 结构必须为：",
+        "{\"title\":\"...\",\"sections\":[{\"name\":\"栏目名\",\"order\":1,\"items\":[\"条目1\"]}]}",
+        `栏目顺序必须是：${sectionNames.join("、")}`,
+        "title 必须是完整周报标题。",
+        "sections 必须包含全部栏目，顺序不能变。",
+        "无内容栏目请输出 items:[\"无\"]。"
+      ].join("\n")
+    },
+    {
+      role: "user",
+      content: JSON.stringify({
+        year: input.year,
+        week: input.week,
+        templateSections: orderedSections,
+        reports: input.reports
+      })
+    }
+  ]
+}
+
+function stripJsonCodeFence(input: string): string {
+  return input
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim()
+}
+
+function parseDocumentFromModelText(text: string): ReportDocument {
+  let parsed: Record<string, unknown>
+
+  try {
+    parsed = JSON.parse(stripJsonCodeFence(text)) as Record<string, unknown>
+  } catch {
+    throw new AIContentValidationError("AI 返回内容不是合法 JSON")
+  }
+
+  if (typeof parsed.title !== "string" || !Array.isArray(parsed.sections)) {
+    throw new AIContentValidationError("AI 返回内容缺少必要文档字段")
+  }
+
+  const sections = parsed.sections.map((section, index) => {
+    const current = section as Record<string, unknown>
+
+    if (
+      !current ||
+      typeof current.name !== "string" ||
+      typeof current.order !== "number" ||
+      !Array.isArray(current.items) ||
+      !current.items.every((item) => typeof item === "string")
+    ) {
+      throw new AIContentValidationError(`AI 返回的第 ${index + 1} 个栏目结构无效`)
+    }
+
+    return {
+      name: current.name,
+      order: current.order,
+      items: current.items as string[]
+    }
+  })
+
+  return {
+    title: parsed.title,
+    sections
+  }
+}
+
+async function callCloudAI(
+  scenario: AIScenario,
+  input: DailyGenerateInput | WeeklyGenerateInput,
+  options: GenerateOptions = {}
+): Promise<ReportDocument> {
+  let createModel: (provider: string) => CloudAIModelInstance
+
+  try {
+    createModel = options.createModel ? options.createModel : getDefaultCreateModel()
+  } catch (error) {
+    if (error instanceof AIRuntimeUnavailableError) {
+      throw error
+    }
+
+    throw new AIRuntimeUnavailableError(error instanceof Error ? error.message : "Cloud AI 初始化失败")
+  }
+
+  const preset = getScenarioModelPreset(scenario)
+
+  let model: CloudAIModelInstance
+
+  try {
+    model = createModel(preset.provider)
+  } catch (error) {
+    throw new AIRuntimeUnavailableError(error instanceof Error ? error.message : "Cloud AI 模型创建失败")
+  }
+
+  const messages = scenario === "daily_generate"
+    ? buildDailyMessages(input as DailyGenerateInput)
+    : buildWeeklyMessages(input as WeeklyGenerateInput)
+
+  let result: CloudAIGenerateTextResult
+
+  try {
+    result = await model.generateText({
+      model: preset.model,
+      messages
+    })
+  } catch (error) {
+    throw new AIRuntimeUnavailableError(error instanceof Error ? error.message : "Cloud AI 调用失败")
+  }
+
+  const text = typeof result.text === "string"
+    ? result.text
+    : result.choices?.[0]?.message?.content
+
+  if (typeof text !== "string") {
+    throw new AIRuntimeUnavailableError("AI did not return usable content")
+  }
+
+  const normalizedText = text.trim()
+
+  if (!normalizedText) {
+    throw new AIRuntimeUnavailableError("AI 未返回有效内容")
+  }
+
+  const document = parseDocumentFromModelText(normalizedText)
+  const validation = validateGeneratedDocument(document, input.templateSections)
+
+  if (!validation.valid) {
+    throw new AIContentValidationError(validation.reason ? validation.reason : "AI 返回内容不符合模板结构")
+  }
+
+  return document
 }
 
 async function callCloudRun(
@@ -304,6 +525,22 @@ export async function generateDailyReport(
 ): Promise<ReportDocument> {
   const runtimeConfig = getRuntimeConfig(options.runtimeConfig)
 
+  if (isCloudAIEnabled(runtimeConfig)) {
+    try {
+      return await callCloudAI("daily_generate", input, options)
+    } catch (error) {
+      if (!(error instanceof AIRuntimeUnavailableError)) {
+        throw error
+      }
+
+      if (isCloudRunEnabled(runtimeConfig)) {
+        return callCloudRun("/api/reports/daily/generate", input, input.templateSections, options)
+      }
+
+      throw error
+    }
+  }
+
   if (isCloudRunEnabled(runtimeConfig)) {
     return callCloudRun("/api/reports/daily/generate", input, input.templateSections, options)
   }
@@ -316,6 +553,22 @@ export async function generateWeeklyReport(
   options: GenerateOptions = {}
 ): Promise<ReportDocument> {
   const runtimeConfig = getRuntimeConfig(options.runtimeConfig)
+
+  if (isCloudAIEnabled(runtimeConfig)) {
+    try {
+      return await callCloudAI("weekly_generate", input, options)
+    } catch (error) {
+      if (!(error instanceof AIRuntimeUnavailableError)) {
+        throw error
+      }
+
+      if (isCloudRunEnabled(runtimeConfig)) {
+        return callCloudRun("/api/reports/weekly/generate", input, input.templateSections, options)
+      }
+
+      throw error
+    }
+  }
 
   if (isCloudRunEnabled(runtimeConfig)) {
     return callCloudRun("/api/reports/weekly/generate", input, input.templateSections, options)
